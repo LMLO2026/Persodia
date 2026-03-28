@@ -1,0 +1,1452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Crossing Decision Tool — Persodia Research</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Source+Sans+3:wght@300;400;600;700&display=swap');
+
+:root {
+  --midnight: #1a2744;
+  --midnight-deep: #111c36;
+  --teal: #2a9d8f;
+  --teal-light: #3ab8a8;
+  --teal-dim: #1e7268;
+  --slate: #6b7a8d;
+  --slate-light: #8a98a8;
+  --cream: #f7f4ef;
+  --warm-white: #fdfcfa;
+  --border: #ddd7ce;
+  --border-dark: #c4bdb2;
+  --text-body: #2c2c2c;
+  --text-light: #5a5a5a;
+  --amber: #d4821a;
+  --amber-bg: #fdf3e3;
+  --red: #c0392b;
+  --red-bg: #fdf0ee;
+  --green: #1e7268;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; scroll-behavior: smooth; }
+body {
+  font-family: 'Source Sans 3', 'Segoe UI', sans-serif;
+  background: var(--cream);
+  color: var(--text-body);
+  min-height: 100vh;
+  line-height: 1.6;
+}
+
+.screen { display: none; min-height: 100vh; flex-direction: column; }
+.screen.active { display: flex; }
+
+.tool-header {
+  background: var(--midnight-deep);
+  border-bottom: 2px solid var(--teal);
+  padding: 15px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky; top: 0; z-index: 100;
+}
+.logo-wrap { display: flex; align-items: center; gap: 10px; }
+.logo-name {
+  font-family: 'Libre Baskerville', Georgia, serif;
+  font-size: 0.78rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.75);
+}
+.progress-wrap { display: flex; align-items: center; gap: 6px; }
+.prog-pip {
+  width: 28px; height: 3px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 2px;
+  transition: background 0.3s;
+}
+.prog-pip.done { background: var(--teal); }
+.prog-pip.active { background: var(--teal-light); }
+.prog-label {
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.35);
+  margin-right: 4px;
+}
+
+.wrap {
+  flex: 1;
+  max-width: 700px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 0 22px;
+}
+
+.tool-footer {
+  padding: 13px 24px;
+  text-align: center;
+  font-size: 0.73rem;
+  color: var(--slate);
+  border-top: 1px solid var(--border);
+  background: var(--warm-white);
+}
+.tool-footer a { color: var(--teal-dim); text-decoration: none; }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.anim { animation: fadeUp 0.38s ease both; }
+
+/* ENTRY */
+#screen-entry { background: var(--midnight-deep); }
+#screen-entry .tool-footer {
+  background: rgba(255,255,255,0.03);
+  border-top-color: rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.28);
+}
+#screen-entry .tool-footer a { color: rgba(42,157,143,0.65); }
+
+.entry-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 60px 22px 48px;
+  max-width: 660px;
+  margin: 0 auto;
+  width: 100%;
+}
+.entry-kicker {
+  font-size: 0.67rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--teal);
+  font-weight: 700;
+  margin-bottom: 16px;
+}
+.entry-title {
+  font-family: 'Libre Baskerville', Georgia, serif;
+  font-size: clamp(2rem, 6vw, 3rem);
+  color: #fff;
+  font-weight: 700;
+  line-height: 1.1;
+  margin-bottom: 10px;
+}
+.entry-title em { color: var(--teal-light); font-style: normal; }
+.entry-sub {
+  font-family: 'Libre Baskerville', Georgia, serif;
+  font-style: italic;
+  font-size: 1rem;
+  color: rgba(255,255,255,0.5);
+  margin-bottom: 34px;
+  line-height: 1.6;
+}
+.teal-rule { width: 40px; height: 2px; background: var(--teal); margin-bottom: 28px; }
+.entry-frame {
+  font-size: 0.94rem;
+  color: rgba(255,255,255,0.62);
+  line-height: 1.8;
+  margin-bottom: 16px;
+}
+.entry-disc {
+  font-size: 0.77rem;
+  color: rgba(255,255,255,0.25);
+  line-height: 1.65;
+  margin-bottom: 42px;
+  padding: 13px 15px;
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 2px;
+}
+
+.btn {
+  display: inline-block;
+  font-family: 'Source Sans 3', sans-serif;
+  font-weight: 700;
+  font-size: 0.87rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  border: none;
+  border-radius: 2px;
+  transition: all 0.2s;
+  text-decoration: none;
+  padding: 14px 34px;
+}
+.btn-primary { background: var(--teal); color: #fff; }
+.btn-primary:hover { background: var(--teal-light); transform: translateY(-1px); }
+.btn-full { width: 100%; display: block; text-align: center; padding: 15px; }
+.btn-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  font-family: 'Source Sans 3', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--teal-dim);
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  transition: color 0.2s;
+}
+.btn-inline:hover { color: var(--teal); }
+.btn-back {
+  background: none; border: none;
+  font-family: 'Source Sans 3', sans-serif;
+  font-size: 0.83rem;
+  color: var(--slate);
+  cursor: pointer;
+  display: flex; align-items: center; gap: 5px;
+  padding: 8px 0;
+  transition: color 0.2s;
+}
+.btn-back:hover { color: var(--midnight); }
+
+.stage-body { flex: 1; padding: 40px 0 28px; }
+.stage-kicker {
+  font-size: 0.66rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--teal-dim);
+  font-weight: 700;
+  margin-bottom: 7px;
+}
+.stage-heading {
+  font-family: 'Libre Baskerville', Georgia, serif;
+  font-size: clamp(1.35rem, 3.8vw, 1.8rem);
+  color: var(--midnight);
+  font-weight: 700;
+  line-height: 1.2;
+}
+.stage-rule { width: 34px; height: 2px; background: var(--teal); margin: 15px 0 20px; }
+.stage-intro {
+  font-family: 'Libre Baskerville', Georgia, serif;
+  font-style: italic;
+  font-size: 0.91rem;
+  color: var(--text-light);
+  line-height: 1.75;
+  margin-bottom: 28px;
+  padding-left: 14px;
+  border-left: 2px solid var(--border);
+}
+
+.q-card {
+  background: var(--warm-white);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--teal);
+  border-radius: 2px;
+  padding: 22px 22px 18px;
+  margin-bottom: 16px;
+}
+.q-tag {
+  font-size: 0.64rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--teal-dim);
+  font-weight: 700;
+  margin-bottom: 9px;
+}
+.q-text {
+  font-family: 'Libre Baskerville', Georgia, serif;
+  font-size: 0.97rem;
+  color: var(--midnight);
+  font-weight: 700;
+  line-height: 1.55;
+  margin-bottom: 11px;
+}
+.q-sub {
+  font-size: 0.81rem;
+  color: var(--text-light);
+  line-height: 1.65;
+  margin-bottom: 16px;
+  padding: 9px 12px;
+  background: rgba(42,157,143,0.06);
+  border-left: 2px solid rgba(42,157,143,0.25);
+  font-style: italic;
+}
+
+.radio-group { display: flex; flex-direction: column; gap: 7px; }
+.radio-opt { cursor: pointer; }
+.radio-opt input { position: absolute; opacity: 0; width: 0; height: 0; }
+.radio-lbl {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  padding: 11px 13px;
+  border: 1.5px solid var(--border);
+  border-radius: 2px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  background: var(--cream);
+}
+.radio-opt input:checked + .radio-lbl {
+  border-color: var(--teal);
+  background: rgba(42,157,143,0.06);
+}
+.radio-opt:hover .radio-lbl { border-color: var(--slate-light); }
+.pip {
+  width: 16px; height: 16px; min-width: 16px;
+  border-radius: 50%;
+  border: 2px solid var(--border-dark);
+  margin-top: 2px;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+.radio-opt input:checked + .radio-lbl .pip {
+  border-color: var(--teal); background: var(--teal);
+}
+.radio-opt input:checked + .radio-lbl .pip::after {
+  content: ''; width: 6px; height: 6px;
+  background: #fff; border-radius: 50%;
+}
+.radio-txt strong { display: block; font-size: 0.89rem; font-weight: 600; color: var(--midnight); margin-bottom: 1px; }
+.radio-txt span { font-size: 0.8rem; color: var(--text-light); line-height: 1.4; }
+
+.inline-warn {
+  display: none;
+  margin-top: 9px;
+  padding: 11px 13px;
+  background: var(--amber-bg);
+  border: 1px solid #e6c07a;
+  border-left: 3px solid var(--amber);
+  font-size: 0.82rem;
+  color: #7a4f10;
+  line-height: 1.6;
+  border-radius: 0 2px 2px 0;
+}
+.inline-warn.show { display: block; }
+
+.nav-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 0 40px;
+  border-top: 1px solid var(--border);
+  margin-top: 6px;
+}
+
+/* GATE */
+.gate-body { flex: 1; padding: 44px 0 36px; }
+.position-preview {
+  background: var(--midnight);
+  border-radius: 2px;
+  padding: 26px 26px 24px;
+  margin-bottom: 28px;
+}
+.pos-eyebrow {
+  font-size: 0.65rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--teal);
+  font-weight: 700;
+  margin-bottom: 14px;
+}
+.score-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+.score-big {
+  font-family: 'Libre Baskerville', Georgia, serif;
+  font-size: 3rem;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1;
+}
+.score-big span { font-size: 1.1rem; color: rgba(255,255,255,0.4); font-weight: 400; }
+.score-track-wrap { flex: 1; padding-bottom: 6px; }
+.score-track-label {
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.35);
+  margin-bottom: 6px;
+}
+.score-track { height: 5px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden; }
+.score-fill { height: 100%; background: var(--teal); border-radius: 3px; transition: width 0.9s ease; width: 0%; }
+.pos-verdict-preview {
+  font-family: 'Libre Baskerville', Georgia, serif;
+  font-size: 0.95rem;
+  color: rgba(255,255,255,0.65);
+  font-style: italic;
+  line-height: 1.6;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255,255,255,0.1);
+}
+.gate-prompt { font-size: 0.93rem; color: var(--text-body); line-height: 1.75; margin-bottom: 24px; }
+.gate-prompt strong { color: var(--midnight); }
+
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 14px; margin-bottom: 12px; }
+.f-field { display: flex; flex-direction: column; gap: 4px; }
+.f-field.full { grid-column: 1 / -1; }
+.f-field label {
+  font-size: 0.72rem; font-weight: 700;
+  letter-spacing: 0.07em; text-transform: uppercase; color: var(--slate);
+}
+.f-field input, .f-field select, .f-field textarea {
+  padding: 10px 12px;
+  border: 1.5px solid var(--border);
+  border-radius: 2px;
+  font-family: 'Source Sans 3', sans-serif;
+  font-size: 0.91rem;
+  color: var(--text-body);
+  background: var(--warm-white);
+  transition: border-color 0.18s;
+  outline: none;
+  -webkit-appearance: none;
+}
+.f-field input:focus, .f-field select:focus, .f-field textarea:focus { border-color: var(--teal); }
+.f-field textarea { resize: vertical; min-height: 66px; line-height: 1.5; }
+.f-field select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath fill='%236b7a8d' d='M5 6L0 0h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 11px center; padding-right: 28px; cursor: pointer;
+}
+.consent-wrap {
+  display: flex; align-items: flex-start; gap: 10px;
+  margin-bottom: 18px; padding: 12px 13px;
+  background: rgba(42,157,143,0.04);
+  border: 1px solid rgba(42,157,143,0.14); border-radius: 2px;
+}
+.consent-wrap input[type="checkbox"] { margin-top: 3px; min-width: 15px; height: 15px; accent-color: var(--teal); cursor: pointer; }
+.consent-wrap label { font-size: 0.81rem; color: var(--text-light); line-height: 1.55; cursor: pointer; }
+.consent-wrap a { color: var(--teal-dim); }
+
+/* REPORT */
+#screen-report { background: var(--warm-white); }
+.report-body { padding: 40px 0 56px; }
+.report-masthead { background: var(--midnight-deep); border-radius: 2px; padding: 26px 24px; margin-bottom: 22px; }
+.rpt-meta { font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(255,255,255,0.3); margin-bottom: 12px; }
+.rpt-org { font-size: 0.86rem; color: rgba(255,255,255,0.5); margin-bottom: 3px; }
+
+.score-dashboard { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 20px; }
+.score-tile { background: var(--warm-white); border: 1px solid var(--border); border-radius: 2px; padding: 13px 10px 11px; text-align: center; }
+.score-tile.total { border-top: 3px solid var(--teal); border-color: var(--teal); background: rgba(42,157,143,0.04); }
+.tile-label { font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--slate); font-weight: 700; margin-bottom: 5px; }
+.tile-num { font-family: 'Libre Baskerville', Georgia, serif; font-size: 1.55rem; font-weight: 700; color: var(--midnight); line-height: 1; margin-bottom: 3px; }
+.score-tile.total .tile-num { font-size: 1.9rem; color: var(--teal-dim); }
+.tile-denom { font-size: 0.68rem; color: var(--slate-light); }
+.tile-bar { height: 3px; background: var(--border); border-radius: 2px; margin-top: 7px; overflow: hidden; }
+.tile-bar-fill { height: 100%; border-radius: 2px; background: var(--teal); transition: width 0.7s ease; }
+
+.verdict-block {
+  background: var(--warm-white);
+  border: 1px solid var(--border);
+  border-top: 3px solid var(--teal);
+  border-radius: 2px;
+  padding: 24px 24px 20px;
+  margin-bottom: 20px;
+}
+.verdict-label { font-size: 0.65rem; letter-spacing: 0.17em; text-transform: uppercase; color: var(--teal-dim); font-weight: 700; margin-bottom: 12px; }
+.verdict-sentence-1 { font-family: 'Libre Baskerville', Georgia, serif; font-size: clamp(1rem, 2.8vw, 1.2rem); color: var(--midnight); font-weight: 700; line-height: 1.4; margin-bottom: 10px; }
+.verdict-sentence-2 { font-size: 0.92rem; color: var(--text-light); line-height: 1.75; margin-bottom: 14px; font-style: italic; font-family: 'Libre Baskerville', Georgia, serif; }
+.verdict-cta-line {
+  display: flex; align-items: center; gap: 8px;
+  padding-top: 14px; border-top: 1px solid var(--border);
+  font-size: 0.85rem; color: var(--slate);
+}
+
+.rpt-section { margin-bottom: 22px; padding-bottom: 22px; border-bottom: 1px solid var(--border); }
+.rpt-section:last-child { border-bottom: none; }
+.rpt-section-label { font-size: 0.65rem; letter-spacing: 0.17em; text-transform: uppercase; color: var(--teal-dim); font-weight: 700; margin-bottom: 10px; }
+.rpt-section p { font-size: 0.91rem; color: var(--text-body); line-height: 1.8; margin-bottom: 11px; }
+.rpt-section p:last-child { margin-bottom: 0; }
+
+.responses-table { width: 100%; border-collapse: collapse; font-size: 0.83rem; }
+.responses-table th { text-align: left; font-size: 0.63rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--slate); font-weight: 700; padding: 6px 10px; border-bottom: 1px solid var(--border); }
+.responses-table td { padding: 8px 10px; border-bottom: 1px solid rgba(221,215,206,0.5); color: var(--text-body); vertical-align: middle; }
+.responses-table tr:last-child td { border-bottom: none; }
+.responses-table tr:nth-child(even) td { background: rgba(247,244,239,0.5); }
+.ans-yes, .ans-gains { color: var(--green); font-weight: 600; }
+.ans-no, .ans-loses { color: var(--red); font-weight: 600; }
+.ans-partially, .ans-uncertain { color: var(--amber); font-weight: 600; }
+
+.flags-block { margin-top: 14px; padding: 12px 14px; background: var(--amber-bg); border-left: 3px solid var(--amber); font-size: 0.82rem; color: #7a4f10; line-height: 1.65; border-radius: 0 2px 2px 0; }
+.flags-block ul { margin: 6px 0 0 16px; }
+.flags-block li { margin-bottom: 3px; }
+
+.financial-block { background: var(--midnight); border-radius: 2px; padding: 26px 24px 22px; margin-top: 22px; }
+.financial-block .rpt-section-label { color: var(--teal); }
+.financial-block p { color: rgba(255,255,255,0.65); font-size: 0.9rem; margin-bottom: 11px; }
+.financial-block p:last-child { margin-bottom: 0; }
+.fin-cta { margin-top: 22px; padding-top: 18px; border-top: 1px solid rgba(255,255,255,0.08); text-align: center; }
+.fin-cta p { color: rgba(255,255,255,0.38); font-size: 0.8rem; margin-bottom: 14px; }
+
+.report-colophon { margin-top: 26px; padding: 14px; border: 1px solid var(--border); border-radius: 2px; font-size: 0.76rem; color: var(--slate); line-height: 1.6; text-align: center; }
+.report-colophon a { color: var(--teal-dim); }
+
+@media (max-width: 520px) {
+  .form-grid { grid-template-columns: 1fr; }
+  .f-field.full { grid-column: 1; }
+  .score-dashboard { grid-template-columns: 1fr 1fr; }
+  .score-tile:first-child { grid-column: 1 / -1; }
+  .tool-header { padding: 13px 16px; }
+  .wrap { padding: 0 16px; }
+  .prog-label { display: none; }
+  .verdict-cta-line { flex-direction: column; align-items: flex-start; }
+}
+</style>
+</head>
+<body>
+
+<!-- ENTRY -->
+<div id="screen-entry" class="screen active">
+  <header class="tool-header">
+    <div class="logo-wrap">
+      <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+        <path d="M4 23 Q9 17, 14 14 Q19 11, 24 5" stroke="#2a9d8f" stroke-width="2.2" stroke-linecap="round" fill="none"/>
+        <circle cx="24" cy="5" r="2.2" fill="#2a9d8f"/>
+      </svg>
+      <span class="logo-name">Persodia Research</span>
+    </div>
+  </header>
+  <div class="entry-body anim">
+    <p class="entry-kicker">IVD Industry Monograph No. 1 — Structured Assessment</p>
+    <h1 class="entry-title">The <em>Crossing</em><br>Decision Tool</h1>
+    <p class="entry-sub">A structured assessment of your project's fitness to complete the analytical-to-diagnostics transition</p>
+    <div class="teal-rule"></div>
+    <p class="entry-frame">This tool applies the structural framework from Persodia Research Monograph No. 1. It assesses where your project currently stands in the crossing from analytical systems to clinical diagnostics — not where you plan to be, but where you are. Answer each question based on current reality.</p>
+    <p class="entry-disc">This tool does not score or rank projects relative to competitors. It applies a structural framework to self-reported conditions to assess fitness for crossing completion. It does not provide a roadmap, model financial outcomes, or substitute for regulatory, commercial, or financial advice.</p>
+    <button class="btn btn-primary" id="btn-start">Begin Assessment →</button>
+  </div>
+  <footer class="tool-footer"><a href="https://persodia.org" target="_blank">persodia.org</a> &nbsp;|&nbsp; © 2026 Miguel Oliveira / Persodia Research</footer>
+</div>
+
+<!-- STAGE 0 -->
+<div id="screen-s0" class="screen">
+  <header class="tool-header">
+    <div class="logo-wrap">
+      <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><path d="M4 23 Q9 17, 14 14 Q19 11, 24 5" stroke="#2a9d8f" stroke-width="2.2" stroke-linecap="round" fill="none"/><circle cx="24" cy="5" r="2.2" fill="#2a9d8f"/></svg>
+      <span class="logo-name">Persodia Research</span>
+    </div>
+    <div class="progress-wrap">
+      <span class="prog-label">Stage</span>
+      <div class="prog-pip active"></div>
+      <div class="prog-pip"></div>
+      <div class="prog-pip"></div>
+      <div class="prog-pip"></div>
+    </div>
+  </header>
+  <div class="wrap">
+    <div class="stage-body anim">
+      <p class="stage-kicker">Stage 0 of 3 — The Prior Question</p>
+      <h2 class="stage-heading">Before the Crossing</h2>
+      <div class="stage-rule"></div>
+      <p class="stage-intro">"This is the question most projects skip. It is the most important one. Answer it based on the fundamental nature of your technology's value — not your aspirations for it."</p>
+      <div class="q-card">
+        <p class="q-tag">Question 0 — Clinical Constraint Fit</p>
+        <p class="q-text">Does your technology gain competitive advantage under clinical constraint — or does it lose it?</p>
+        <p class="q-sub">Clinical constraint means: fixed assay menu, standardised workflows, locked operating parameters, manufacturer accountability for every result, no flexibility to adapt rapidly to new applications. If your technology's value depends on flexibility, application breadth, or speed of iteration — clinical constraint will reduce rather than enhance it.</p>
+        <div class="radio-group">
+          <label class="radio-opt">
+            <input type="radio" name="q0" value="gains">
+            <span class="radio-lbl"><span class="pip"></span><span class="radio-txt">
+              <strong>Gains advantage</strong>
+              <span>The technology becomes more valuable when standardised into a defined clinical use case. Constraint deepens its indispensability.</span>
+            </span></span>
+          </label>
+          <label class="radio-opt">
+            <input type="radio" name="q0" value="loses">
+            <span class="radio-lbl"><span class="pip"></span><span class="radio-txt">
+              <strong>Loses advantage</strong>
+              <span>The technology's value depends on flexibility, breadth, or adaptability. Standardisation would constrain what makes it competitive.</span>
+            </span></span>
+          </label>
+          <label class="radio-opt">
+            <input type="radio" name="q0" value="uncertain">
+            <span class="radio-lbl"><span class="pip"></span><span class="radio-txt">
+              <strong>Uncertain</strong>
+              <span>This has not been formally assessed.</span>
+            </span></span>
+          </label>
+        </div>
+        <div class="inline-warn" id="warn-q0">
+          <strong>Note:</strong> Proceeding without answering this question is itself a diagnostic finding. Most projects that cannot answer it confidently are treating the crossing as a default strategy rather than a considered one. This uncertainty will be reflected in your fitness score.
+        </div>
+      </div>
+    </div>
+    <div class="nav-row">
+      <button class="btn-back" id="btn-back-s0">← Entry</button>
+      <button class="btn btn-primary" id="btn-next-s0">Continue →</button>
+    </div>
+  </div>
+  <footer class="tool-footer"><a href="https://persodia.org" target="_blank">persodia.org</a> &nbsp;|&nbsp; © 2026 Persodia Research</footer>
+</div>
+
+<!-- STAGE 1 -->
+<div id="screen-s1" class="screen">
+  <header class="tool-header">
+    <div class="logo-wrap">
+      <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><path d="M4 23 Q9 17, 14 14 Q19 11, 24 5" stroke="#2a9d8f" stroke-width="2.2" stroke-linecap="round" fill="none"/><circle cx="24" cy="5" r="2.2" fill="#2a9d8f"/></svg>
+      <span class="logo-name">Persodia Research</span>
+    </div>
+    <div class="progress-wrap">
+      <span class="prog-label">Stage</span>
+      <div class="prog-pip done"></div>
+      <div class="prog-pip active"></div>
+      <div class="prog-pip"></div>
+      <div class="prog-pip"></div>
+    </div>
+  </header>
+  <div class="wrap">
+    <div class="stage-body anim">
+      <p class="stage-kicker">Stage 1 of 3 — Product Foundation</p>
+      <h2 class="stage-heading">Product Foundation</h2>
+      <div class="stage-rule"></div>
+      <p class="stage-intro">"Three conditions define whether a diagnostic offering exists. These are the requirements closest to analytical projects' existing competence — and the stage where false confidence is most common."</p>
+      <div class="q-card">
+        <p class="q-tag">Condition 1a — System Completeness</p>
+        <p class="q-text">Can the project field an integrated offering — instrumentation, reagents, software, LIS connectivity — validated as a whole, not as components?</p>
+        <p class="q-sub">Not planned. Not in development. Available now or within a defined, funded programme of 18 months or less.</p>
+        <div class="radio-group">
+          <label class="radio-opt"><input type="radio" name="q1a" value="yes"><span class="radio-lbl"><span class="pip"></span><span class="radio-txt"><strong>Yes</strong></span></span></label>
+          <label class="radio-opt"><input type="radio" name="q1a" value="partially"><span class="radio-lbl"><span class="pip"></span><span class="radio-txt"><strong>Partially</strong></span></span></label>
+          <label class="radio-opt"><input type="radio" name="q1a" value="no"><span class="radio-lbl"><span class="pip"></span><span class="radio-txt"><strong>No</strong></span></span></label>
+        </div>
+      </div>
+      <div class="q-card">
+        <p class="q-tag">Condition 1b — Assay Portfolio Viability</p>
+        <p class="q-text">Does the project's assay menu address at minimum three to five clinical questions across the patient pathway — with at least one assay that drives a treatment decision or defines a clinical standard?</p>
+        <p class="q-sub">A single analyte, regardless of analytical quality, does not constitute a viable portfolio for installed-base economics.</p>
+        <div class="radio-group">
+          <label class="radio-opt"><input type="radio" name="q1b" value="yes"><span class="radio-lbl"><span class="pip"></span><span class="radio-txt"><strong>Yes</strong></span></span></label>
+          <label class="radio-opt"><input type="radio" name="q1b" value="partially"><span class="radio-lbl"><span class="pip"></span><span class="radio-txt"><strong>Partially</strong></span></span></label>
+          <label class="radio-opt"><input type="radio" name="q1b" value="no"><span class="radio-lbl"><span class="pip"></span><span class="radio-txt"><strong>No</strong></span></span></label>
+        </div>
+      </div>
+      <div class="q-card">
+        <p class="q-tag">Condition 1c — Evidence Architecture</p>
+        <p class="q-text">Has the project begun generating clinical validation evidence — not technical validation, but evidence that results change patient management — with a funded plan for post-market evidence generation beyond regulatory submission?</p>
+        <div class="radio-group">
+          <label class="radio-opt"><input type="radio" name="q1c" value="yes"><span class="radio-lbl"><span class="pip"></span><span class="radio-txt"><strong>Yes</strong></span></span></label>
+          <label class="radio-opt"><input type="radio" name="q1c" value="partially"><span class="radio-lbl"><span class="pip"></span><span class="radio-txt"><strong>Partially</strong></span></span></label>
+          <label class="radio-opt"><input type="radio" name="q1c" value="no"><span class="radio-lbl"><span class="pip"></span><span class="radio-txt"><strong>No</strong></span></span></label>
+        </div>
+      </div>
+    </div>
+    <div class="nav-row">
+      <button class="btn-back" id="btn-back-s1">← Back</button>
+      <button class="btn btn-primary" id="btn-next-s1">Continue →</button>
+    </div>
+  </div>
+  <footer class="tool-footer"><a href="https://persodia.org" target="_blank">persodia.org</a> &nbsp;|&nbsp; © 2026 Persodia Research</footer>
+</div>
+
+<!-- STAGE 2 -->
+<div id="screen-s2" class="screen">
+  <header class="tool-header">
+    <div class="logo-wrap">
+      <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><path d="M4 23 Q9 17, 14 14 Q19 11, 24 5" stroke="#2a9d8f" stroke-width="2.2" stroke-linecap="round" fill="none"/><circle cx="24" cy="5" r="2.2" fill="#2a9d8f"/></svg>
+      <span class="logo-name">Persodia Research</span>
+    </div>
+    <div class="progress-wrap">
+      <span class="prog-label">Stage</span>
+      <div class="prog-pip done"></div>
+      <div class="prog-pip done"></div>
+      <div class="prog-pip active"></div>
+      <div class="prog-pip"></div>
+    </div>
+  </header>
+  <div class="wrap">
+    <div class="stage-body anim">
+      <p class="stage-kicker">Stage 2 of 3 — Institutional Authorisation</p>
+      <h2 class="stage-heading">Institutional Authorisation</h2>
+      <div class="stage-rule"></div>
+      <p class="stage-intro">"Two external gatekeeping processes convert a built product into a legally deployable and economically viable one. Both operate on timelines the project does not control. Both generate permanent obligations."</p>
+      <div class="q-card">
+        <p class="q-tag">Condition 2a — Regulatory Pathway Clarity</p>
+        <p class="q-text">Does the project have a defined regulatory pathway — CE-IVD, FDA 510(k), PMA, or equivalent — with submission timelines based on actual regulatory interaction, not internal assumption? And has it built or contracted a QMS capable of sustaining post-market obligations permanently?</p>
+        <div class="radio-group">
+          <label class="radio-opt"><input type="radio" name="q2a" value="yes"><span class="radio-lbl"><span class="pip"></span><span class="radio-txt"><strong>Yes</strong></span></span></label>
+          <label class="radio-opt"><input type="radio" name="q2a" value="partially"><span class="radio-lbl"><span class="pip"></span><span class="radio-txt"><strong>Partially</strong></span></span></label>
+          <label class="radio-opt"><input type="radio" name="q2a" value="no"><span class="radio-lbl"><span class="pip"></span><span class="radio-txt"><strong>No</strong></span></span></label>
+        </div>
+      </div>
+      <div class="q-card">
+        <p class="q-tag">Condition 2b — Reimbursement Visibility</p>
+        <p class="q-text">Has the project identified the specific reimbursement codes or pathways for its primary target markets, engaged with at least one payer or HTA body, and modelled fully-loaded cost recovery — including instrument placement amortisation, reagent supply, service, regulatory maintenance, and commercial infrastructure?</p>
+        <div class="radio-group">
+          <label class="radio-opt"><input type="radio" name="q2b" value="yes"><span class="radio-lbl"><span class="pip"></span><span class="radio-txt"><strong>Yes</strong></span></span></label>
+          <label class="radio-opt"><input type="radio" name="q2b" value="partially"><span class="radio-lbl"><span class="pip"></span><span class="radio-txt"><strong>Partially</strong></span></span></label>
+          <label class="radio-opt"><input type="radio" name="q2b" value="no"><span class="radio-lbl"><span class="pip"></span><span class="radio-txt"><strong>No</strong></span></span></label>
+        </div>
+      </div>
+    </div>
+    <div class="nav-row">
+      <button class="btn-back" id="btn-back-s2">← Back</button>
+      <button class="btn btn-primary" id="btn-next-s2">Continue →</button>
+    </div>
+  </div>
+  <footer class="tool-footer"><a href="https://persodia.org" target="_blank">persodia.org</a> &nbsp;|&nbsp; © 2026 Persodia Research</footer>
+</div>
+
+<!-- STAGE 3 -->
+<div id="screen-s3" class="screen">
+  <header class="tool-header">
+    <div class="logo-wrap">
+      <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><path d="M4 23 Q9 17, 14 14 Q19 11, 24 5" stroke="#2a9d8f" stroke-width="2.2" stroke-linecap="round" fill="none"/><circle cx="24" cy="5" r="2.2" fill="#2a9d8f"/></svg>
+      <span class="logo-name">Persodia Research</span>
+    </div>
+    <div class="progress-wrap">
+      <span class="prog-label">Stage</span>
+      <div class="prog-pip done"></div>
+      <div class="prog-pip done"></div>
+      <div class="prog-pip done"></div>
+      <div class="prog-pip active"></div>
+    </div>
+  </header>
+  <div class="wrap">
+    <div class="stage-body anim">
+      <p class="stage-kicker">Stage 3 of 3 — Market Infrastructure</p>
+      <h2 class="stage-heading">Market Infrastructure</h2>
+      <div class="stage-rule"></div>
+      <p class="stage-intro">"This is where most crossings fail. These requirements look, from the outside, like sales and logistics problems. They are structural commitments that must be in place before first system placement — not after scale."</p>
+      <div class="q-card">
+        <p class="q-tag">Condition 3a — Service and Supply Readiness</p>
+        <p class="q-text">Can the project sustain reagent supply to clinical standards — cold chain, lot control, continuity guarantees — and field service at clinical urgency — geographic density, trained engineers, remote diagnostics, escalation protocols calibrated to clinical consequences — before first system placement?</p>
+        <div class="radio-group">
+          <label class="radio-opt"><input type="radio" name="q3a" value="yes"><span class="radio-lbl"><span class="pip"></span><span class="radio-txt"><strong>Yes</strong></span></span></label>
+          <label class="radio-opt"><input type="radio" name="q3a" value="partially"><span class="radio-lbl"><span class="pip"></span><span class="radio-txt"><strong>Partially</strong></span></span></label>
+          <label class="radio-opt"><input type="radio" name="q3a" value="no"><span class="radio-lbl"><span class="pip"></span><span class="radio-txt"><strong>No</strong></span></span></label>
+        </div>
+      </div>
+      <div class="q-card">
+        <p class="q-tag">Condition 3b — Customer Interface Capability</p>
+        <p class="q-text">Does the project have IVD-competent commercial talent capable of managing multi-year tender processes, laboratory integration programmes, and clinical peer engagement? And can it sustain reagent rental economics — instruments placed below cost, revenue recovered over five to seven years — without pressure to generate hardware margin prematurely?</p>
+        <div class="radio-group">
+          <label class="radio-opt"><input type="radio" name="q3b" value="yes"><span class="radio-lbl"><span class="pip"></span><span class="radio-txt"><strong>Yes</strong></span></span></label>
+          <label class="radio-opt"><input type="radio" name="q3b" value="partially"><span class="radio-lbl"><span class="pip"></span><span class="radio-txt"><strong>Partially</strong></span></span></label>
+          <label class="radio-opt"><input type="radio" name="q3b" value="no"><span class="radio-lbl"><span class="pip"></span><span class="radio-txt"><strong>No</strong></span></span></label>
+        </div>
+      </div>
+    </div>
+    <div class="nav-row">
+      <button class="btn-back" id="btn-back-s3">← Back</button>
+      <button class="btn btn-primary" id="btn-next-s3">See My Assessment →</button>
+    </div>
+  </div>
+  <footer class="tool-footer"><a href="https://persodia.org" target="_blank">persodia.org</a> &nbsp;|&nbsp; © 2026 Persodia Research</footer>
+</div>
+
+<!-- GATE -->
+<div id="screen-gate" class="screen">
+  <header class="tool-header">
+    <div class="logo-wrap">
+      <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><path d="M4 23 Q9 17, 14 14 Q19 11, 24 5" stroke="#2a9d8f" stroke-width="2.2" stroke-linecap="round" fill="none"/><circle cx="24" cy="5" r="2.2" fill="#2a9d8f"/></svg>
+      <span class="logo-name">Persodia Research</span>
+    </div>
+  </header>
+  <div class="wrap">
+    <div class="gate-body anim">
+      <div class="position-preview">
+        <p class="pos-eyebrow">Your Assessment — Persodia Crossing Framework</p>
+        <div class="score-row">
+          <div class="score-big" id="gate-score-num">—<span>/100</span></div>
+          <div class="score-track-wrap">
+            <div class="score-track-label">Fitness for crossing completion</div>
+            <div class="score-track"><div class="score-fill" id="gate-score-bar"></div></div>
+          </div>
+        </div>
+        <p class="pos-verdict-preview" id="gate-verdict-preview">—</p>
+      </div>
+      <p class="gate-prompt">Your full assessment — including <strong>what your fitness score means at your current stage</strong>, a breakdown across all four conditions, the <strong>structural gaps requiring attention</strong>, and the <strong>financial dimension</strong> — is ready. Enter your details to receive it on screen and by email.</p>
+      <form id="gate-form">
+        <div class="form-grid">
+          <div class="f-field"><label for="f-first">First Name *</label><input type="text" id="f-first" required autocomplete="given-name"></div>
+          <div class="f-field"><label for="f-last">Last Name *</label><input type="text" id="f-last" required autocomplete="family-name"></div>
+          <div class="f-field full"><label for="f-proj">Project / Company *</label><input type="text" id="f-proj" required placeholder="Project name or company"></div>
+          <div class="f-field full"><label for="f-title">Your Role *</label><input type="text" id="f-title" required placeholder="e.g. CEO, VP Business Development, Project Lead"></div>
+          <div class="f-field full"><label for="f-email">Email Address *</label><input type="email" id="f-email" required autocomplete="email"></div>
+          <div class="f-field full">
+            <label for="f-country">Country *</label>
+            <select id="f-country" required>
+              <option value="">Select country…</option>
+              <option>Germany</option><option>United Kingdom</option><option>United States</option>
+              <option>France</option><option>Netherlands</option><option>Switzerland</option>
+              <option>Belgium</option><option>Austria</option><option>Sweden</option>
+              <option>Denmark</option><option>Norway</option><option>Finland</option>
+              <option>Italy</option><option>Spain</option><option>Portugal</option>
+              <option>Ireland</option><option>Poland</option><option>Czech Republic</option>
+              <option>Australia</option><option>Canada</option><option>Japan</option>
+              <option>South Korea</option><option>Singapore</option><option>Israel</option>
+              <option>India</option><option>China</option><option>Brazil</option><option>Other</option>
+            </select>
+          </div>
+          <div class="f-field full">
+            <label for="f-context">Briefly describe your technology or project stage (optional, 150 chars max)</label>
+            <textarea id="f-context" maxlength="150" placeholder="e.g. LC-MS/MS platform evaluating IVD entry for sepsis biomarkers…"></textarea>
+          </div>
+        </div>
+        <div class="consent-wrap">
+          <input type="checkbox" id="f-consent" required>
+          <label for="f-consent">I agree to receive occasional research communications from Persodia Research. You can unsubscribe at any time. <a href="https://persodia.org/privacy" target="_blank">Privacy policy</a>.</label>
+        </div>
+        <button type="submit" class="btn btn-primary btn-full" id="gate-submit-btn">Receive My Full Assessment →</button>
+        <div id="gate-error" style="display:none;margin-top:10px;padding:10px 12px;background:var(--red-bg);border:1px solid var(--red);border-radius:2px;font-size:0.83rem;color:var(--red)"></div>
+      </form>
+    </div>
+  </div>
+  <footer class="tool-footer"><a href="https://persodia.org" target="_blank">persodia.org</a> &nbsp;|&nbsp; © 2026 Persodia Research</footer>
+</div>
+
+<!-- REPORT -->
+<div id="screen-report" class="screen">
+  <header class="tool-header">
+    <div class="logo-wrap">
+      <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><path d="M4 23 Q9 17, 14 14 Q19 11, 24 5" stroke="#2a9d8f" stroke-width="2.2" stroke-linecap="round" fill="none"/><circle cx="24" cy="5" r="2.2" fill="#2a9d8f"/></svg>
+      <span class="logo-name">Persodia Research</span>
+    </div>
+  </header>
+  <div class="wrap">
+    <div class="report-body anim">
+      <div class="report-masthead">
+        <p class="rpt-meta">Persodia Research — The Crossing Decision Tool</p>
+        <p class="rpt-org" id="rpt-proj">—</p>
+        <p class="rpt-org" id="rpt-date">—</p>
+      </div>
+      <div class="score-dashboard">
+        <div class="score-tile total">
+          <div class="tile-label">Overall</div>
+          <div class="tile-num" id="tile-total">—</div>
+          <div class="tile-denom">/ 100</div>
+          <div class="tile-bar"><div class="tile-bar-fill" id="bar-total"></div></div>
+        </div>
+        <div class="score-tile">
+          <div class="tile-label">Stage 0</div>
+          <div class="tile-num" id="tile-s0">—</div>
+          <div class="tile-denom" id="denom-s0">/ —</div>
+          <div class="tile-bar"><div class="tile-bar-fill" id="bar-s0"></div></div>
+        </div>
+        <div class="score-tile">
+          <div class="tile-label">Stage 1</div>
+          <div class="tile-num" id="tile-s1">—</div>
+          <div class="tile-denom" id="denom-s1">/ —</div>
+          <div class="tile-bar"><div class="tile-bar-fill" id="bar-s1"></div></div>
+        </div>
+        <div class="score-tile">
+          <div class="tile-label">Stage 2</div>
+          <div class="tile-num" id="tile-s2">—</div>
+          <div class="tile-denom" id="denom-s2">/ —</div>
+          <div class="tile-bar"><div class="tile-bar-fill" id="bar-s2"></div></div>
+        </div>
+        <div class="score-tile">
+          <div class="tile-label">Stage 3</div>
+          <div class="tile-num" id="tile-s3">—</div>
+          <div class="tile-denom" id="denom-s3">/ —</div>
+          <div class="tile-bar"><div class="tile-bar-fill" id="bar-s3"></div></div>
+        </div>
+      </div>
+      <div class="verdict-block">
+        <p class="verdict-label">Fitness for Crossing Completion</p>
+        <p class="verdict-sentence-1" id="rpt-v1">—</p>
+        <p class="verdict-sentence-2" id="rpt-v2">—</p>
+        <div class="verdict-cta-line">
+          <span>This rating warrants a conversation.</span>
+          <button class="btn-inline" id="btn-cta-inline">Discuss this rating with Miguel Oliveira →</button>
+        </div>
+      </div>
+      <div class="rpt-section">
+        <p class="rpt-section-label">What This Means Structurally</p>
+        <div id="rpt-meaning"></div>
+      </div>
+      <div class="rpt-section">
+        <p class="rpt-section-label">Priority Action</p>
+        <div id="rpt-action"></div>
+      </div>
+      <div class="rpt-section">
+        <p class="rpt-section-label">Stage Responses and Scoring</p>
+        <table class="responses-table">
+          <thead><tr><th>Stage</th><th>Condition</th><th>Answer</th><th>Points</th></tr></thead>
+          <tbody id="rpt-responses"></tbody>
+        </table>
+        <div class="flags-block" id="rpt-flags" style="display:none"></div>
+      </div>
+      <div class="financial-block">
+        <p class="rpt-section-label">The Financial Dimension</p>
+        <p>Every crossing project has a specific financial profile: a cost curve that begins before revenue, a breakeven point defined by installed-base density and reimbursement rate, and a gap between cost accumulation and revenue realisation that determines how much capital the crossing requires and how long the project must sustain it.</p>
+        <p>That financial model — the investment phase, the placement economics, the external timeline variables that govern reimbursement and adoption, and the compounding gap between cost and revenue curves — is the dimension of the crossing that is most frequently underestimated and least frequently modelled with honest assumptions.</p>
+        <p>Understanding your financial position in the crossing requires modelling three scenarios defined not by optimism or pessimism, but by how external institutions — payers, guideline bodies, laboratory procurement cycles — behave relative to your plan. Most financial models of the crossing assume Scenario A. Most crossings experience Scenario B. Some encounter Scenario C, which cannot be recovered from within the constraints of the original investment case.</p>
+        <div class="fin-cta">
+          <p>Persodia Research works with projects on the financial modelling of their crossing position as part of advisory engagement.</p>
+          <a href="https://persodia.org/contact" class="btn btn-primary" id="btn-cta-main" target="_blank">Request a Diagnostic Conversation with Miguel Oliveira</a>
+        </div>
+      </div>
+      <div class="report-colophon">
+        This assessment is derived from the framework in <em>Persodia Research IVD Industry Monograph No. 1</em>.<br>
+        Download at <a href="https://persodia.org" target="_blank">persodia.org</a> &nbsp;|&nbsp; © 2026 Persodia Research
+      </div>
+    </div>
+  </div>
+  <footer class="tool-footer"><a href="https://persodia.org" target="_blank">persodia.org</a> &nbsp;|&nbsp; © 2026 Persodia Research</footer>
+</div>
+
+<script>
+// ════════════════════════════════════════════════════════════════════
+//  MODEL CONFIGURATION
+//  All variables that govern scoring behaviour are here.
+//  Edit this block to adjust the model without touching logic below.
+// ════════════════════════════════════════════════════════════════════
+
+const CONFIG = {
+
+  // ── NOTIFICATIONS ──────────────────────────────────────────────
+  // Get your free key at https://web3forms.com
+  // Leave as-is to run in test mode (emails silently skipped)
+  WEB3FORMS_KEY:  'YOUR_WEB3FORMS_ACCESS_KEY',
+  NOTIFY_EMAIL:   'miguel@persodia.org',
+  CONTACT_URL:    'https://persodia.org/contact',
+  PRIVACY_URL:    'https://persodia.org/privacy',
+
+  // ── ANSWER VALUES (raw ratio, 0.0 – 1.0) ───────────────────────
+  // How much each answer type contributes to a stage's raw score
+  ANSWER_VALUES: {
+    yes:       1.00,
+    gains:     1.00,
+    no:        0.00,
+    loses:     0.00,
+    partially: 0.50,
+    uncertain: 0.25
+  },
+
+  // ── STAGE WEIGHT TABLE ──────────────────────────────────────────
+  // Rows = user's current stage (determined by first failure)
+  // Cols = weight (max points) each stage contributes to the total
+  // Each row must sum to 100
+  //
+  // Reading: a Stage 0 user gets 70% of their score from Stage 0,
+  //          only 3% from Stage 3 — gaps there are not yet relevant.
+  //          A Stage 3 user gets 35% from Stage 3 — that is now
+  //          the dominant factor.
+  WEIGHTS: {
+    //         s0   s1   s2   s3
+    0:  { s0: 70, s1: 20, s2:  7, s3:  3 },
+    1:  { s0: 40, s1: 40, s2: 15, s3:  5 },
+    2:  { s0: 25, s1: 30, s2: 30, s3: 15 },
+    3:  { s0: 15, s1: 20, s2: 30, s3: 35 }
+  },
+
+  // ── FITNESS SCORE BANDS ─────────────────────────────────────────
+  // Score thresholds that determine the fitness level description
+  // in the second verdict sentence.
+  // Each band: { max, label, context }
+  //   max     = upper bound (inclusive) of this band
+  //   label   = short fitness label (used in email subject)
+  //   context = sentence fragment inserted into verdict sentence 2
+  SCORE_BANDS: [
+    {
+      max: 20,
+      label: 'Pre-foundational',
+      context: 'indicates that the structural conditions for a viable crossing are not in place. In a typical crossing attempt, a score at this level reflects either a technology that does not benefit from clinical constraint, or a project where the foundational investments have not yet been made'
+    },
+    {
+      max: 45,
+      label: 'Early crossing',
+      context: 'indicates that the structural preconditions for the crossing are largely unmet at this stage. In a typical crossing attempt, projects at this score are still operating primarily as analytical ventures, regardless of their diagnostic ambitions'
+    },
+    {
+      max: 65,
+      label: 'Mid crossing',
+      context: 'suggests the project is in early to mid crossing — significant structural conditions remain unresolved. In a typical crossing attempt, a score in this range marks the point where the most capital-intensive phase is approaching but has not yet been adequately prepared for'
+    },
+    {
+      max: 82,
+      label: 'Late crossing',
+      context: 'indicates meaningful progress — the foundations are substantially in place, but the conditions for sustained commercial deployment are not yet fully secured. In a typical crossing attempt, this range represents the point where execution risk and structural risk coexist'
+    },
+    {
+      max: 100,
+      label: 'Crossing viable',
+      context: 'places the project among the small proportion of crossing attempts that have assembled the structural conditions necessary for completion. The remaining risk is execution, not architecture'
+    }
+  ],
+
+  // ── STAGE LABELS ────────────────────────────────────────────────
+  // Used in email body, report stage line, and verdict sentence 1
+  STAGE_NAMES: [
+    'Stage 0 — technology fit for clinical constraint',
+    'Stage 1 — product foundation',
+    'Stage 2 — institutional authorisation',
+    'Stage 3 — market infrastructure'
+  ],
+
+  // ── CONDITION LABELS ────────────────────────────────────────────
+  // Used in the responses table and flags list
+  CONDITION_LABELS: {
+    q0:  'Clinical constraint fit',
+    q1a: '1a — System completeness',
+    q1b: '1b — Assay portfolio viability',
+    q1c: '1c — Evidence architecture',
+    q2a: '2a — Regulatory pathway clarity',
+    q2b: '2b — Reimbursement visibility',
+    q3a: '3a — Service and supply readiness',
+    q3b: '3b — Customer interface capability'
+  }
+
+}; // end CONFIG
+
+// ════════════════════════════════════════════════════════════════════
+//  STATE  (do not edit)
+// ════════════════════════════════════════════════════════════════════
+
+const S = {
+  q0: null, q1a: null, q1b: null, q1c: null,
+  q2a: null, q2b: null, q3a: null, q3b: null,
+  currentStage: null,
+  failStage: null,
+  scores: {},
+  verdict: {},
+  flags: [],
+  lead: {}
+};
+
+// ════════════════════════════════════════════════════════════════════
+//  SCORING ENGINE  (do not edit — adjust CONFIG above instead)
+// ════════════════════════════════════════════════════════════════════
+
+function rawRatio(answers) {
+  const total = answers.reduce((sum, a) => sum + (CONFIG.ANSWER_VALUES[a] ?? 0), 0);
+  return total / answers.length;
+}
+
+function determineCurrentStage() {
+  const stages = [
+    [S.q0],
+    [S.q1a, S.q1b, S.q1c],
+    [S.q2a, S.q2b],
+    [S.q3a, S.q3b]
+  ];
+  for (let i = 0; i < stages.length; i++) {
+    if (stages[i].some(a => a === 'no' || a === 'loses')) {
+      return Math.max(0, i - 1);
+    }
+  }
+  return 3;
+}
+
+function determineFailStage() {
+  const stages = [
+    [S.q0],
+    [S.q1a, S.q1b, S.q1c],
+    [S.q2a, S.q2b],
+    [S.q3a, S.q3b]
+  ];
+  for (let i = 0; i < stages.length; i++) {
+    if (stages[i].some(a => a === 'no' || a === 'loses')) return i;
+  }
+  return null;
+}
+
+function calcScores() {
+  const cs = S.currentStage;
+  const w  = CONFIG.WEIGHTS[cs];
+  const s0 = Math.round(rawRatio([S.q0])                    * w.s0);
+  const s1 = Math.round(rawRatio([S.q1a, S.q1b, S.q1c])    * w.s1);
+  const s2 = Math.round(rawRatio([S.q2a, S.q2b])            * w.s2);
+  const s3 = Math.round(rawRatio([S.q3a, S.q3b])            * w.s3);
+  const total = Math.min(100, s0 + s1 + s2 + s3);
+  return { s0, s1, s2, s3, total, w };
+}
+
+function scoreBand(total) {
+  return CONFIG.SCORE_BANDS.find(b => total <= b.max) || CONFIG.SCORE_BANDS[CONFIG.SCORE_BANDS.length - 1];
+}
+
+function buildVerdict(scores, failStage) {
+  const sn = CONFIG.STAGE_NAMES;
+  let s1 = '';
+
+  if (failStage === null) {
+    s1 = 'The project has met the structural requirements across all four stages of the crossing framework, with ' +
+      (scores.s3 === CONFIG.WEIGHTS[3].s3 ? 'full' : 'partial') + ' completion of market infrastructure.';
+  } else if (failStage === 0) {
+    s1 = 'The project has not yet resolved the foundational question at Stage 0 — whether the technology gains or loses advantage under clinical constraint. The conditions of all subsequent stages remain contingent on this answer.';
+  } else {
+    const completed = sn.slice(0, failStage).join(', ');
+    s1 = 'The project has completed, or substantially addressed, the requirements of ' + completed +
+      '. The first structural gap appears at ' + sn[failStage] + '.';
+  }
+
+  const band = scoreBand(scores.total);
+  const s2 = 'A fitness score of ' + scores.total + ' ' + band.context + '.';
+
+  return { s1, s2 };
+}
+
+function collectFlags() {
+  const f = [];
+  if (S.q0 === 'uncertain') f.push('Stage 0: Technology–constraint fit not formally assessed');
+  if (S.q0 === 'loses')     f.push('Stage 0: Technology identified as losing advantage under clinical constraint');
+  Object.keys(CONFIG.CONDITION_LABELS).forEach(k => {
+    if (k === 'q0') return;
+    if (S[k] === 'partially') f.push('Partially met: ' + CONFIG.CONDITION_LABELS[k]);
+    if (S[k] === 'no')        f.push('Not met: '       + CONFIG.CONDITION_LABELS[k]);
+  });
+  return f;
+}
+
+// ════════════════════════════════════════════════════════════════════
+//  STRUCTURAL CONTENT (editorial — keyed by first failure stage)
+// ════════════════════════════════════════════════════════════════════
+
+const CONTENT = {
+  null: {
+    meaning: [
+      'Reaching this point means the project has built what most attempting the crossing do not: a complete product foundation, institutional authorisation in target markets, and the commercial and service infrastructure required for sustainable deployment. That combination is rare.',
+      'The competitive moat that makes the IVD position valuable — regulatory files, installed base, service infrastructure, institutional relationships — is now forming. It compounds over time. Each year of operation, each contract renewal, each guideline inclusion and EQA participation record deepens it.',
+      'The remaining risks are execution risks, not structural ones: geography sequencing, menu expansion pacing, service density investment ahead of demand, and the discipline to sustain reagent rental economics without short-term hardware margin pressure.'
+    ],
+    action: [
+      'Define the geography and segment sequencing for installed-base growth. The installed-base moat compounds only when density is sufficient within a defined geography or segment — distributed thin placement across many markets without depth in any of them produces neither the service economics nor the institutional relationships that create switching costs. Concentrate before expanding.'
+    ]
+  },
+  0: {
+    meaning: [
+      'The IVD market is attractive. That attraction is real and the economics are compelling. But attractiveness is not a sufficient reason to cross. For a meaningful subset of technologies, the crossing removes the flexibility, application breadth, or iterative capability that created value in the first place.',
+      'Entering diagnostics under these conditions does not produce a stronger business — it produces a weaker one, constrained into a commercial model that does not suit the technology, competing against projects for whom that model is natural.',
+      'This is not a failure finding. Remaining analytical is a strategically coherent position. The projects that hold the strongest positions in analytical instrumentation did not reach them by attempting to become diagnostics companies — they reached them by being exceptionally good analytical ventures.'
+    ],
+    action: [
+      'Invest in deepening the analytical position rather than attempting to convert it. If clinical laboratory revenue is a strategic objective, the more sustainable path is partnership with established IVD manufacturers who can deploy the technology within their commercial and regulatory infrastructure — rather than building that infrastructure independently.'
+    ]
+  },
+  1: {
+    meaning: [
+      'The crossing begins when a complete system — instrumentation, reagents, software, validated workflows — addresses real clinical questions with evidence that results change patient management. Until that foundation exists, the project is still in the analytical market regardless of its intentions.',
+      'This is the most common position for projects evaluating diagnostics entry, and it is frequently misread as an early stage of the crossing. It is not.',
+      'The specific gap in the foundation — system completeness, assay portfolio viability, or evidence architecture — determines what the next investment must address. A single missing condition prevents deployment just as completely as three missing conditions.'
+    ],
+    action: [
+      'Identify which of the Stage 1 conditions is the binding constraint and resource it specifically. Note that assay portfolio development is rarely an R&D problem — it is a clinical partnership and in-licensing problem measured in years, not months. If portfolio breadth is the gap, the timeline to crossing viability is longer than most product development plans assume.'
+    ]
+  },
+  2: {
+    meaning: [
+      'Regulatory clearance creates the legal right to sell. It does not create revenue. In most developed healthcare markets, a diagnostic test must be separately authorised for payment through a process that evaluates clinical utility, cost-effectiveness, and budget impact on its own timeline.',
+      'The time from regulatory clearance to reimbursement authorisation in major European markets is typically two to five years. During that period, post-market obligations — vigilance reporting, change control, regulatory maintenance — are already accumulating cost.',
+      'Projects in this position frequently discover that their financial model assumed reimbursement would follow clearance within a commercially acceptable period. When it does not, the gap between cost accumulation and revenue realisation becomes the defining strategic problem.'
+    ],
+    action: [
+      'Treat reimbursement as a programme, not a process. Identify the specific HTA pathway and evidentiary requirements for the two or three primary target markets. Engage with payer bodies now, before clearance, because the evidence required for reimbursement submission takes two to five years to generate — meaning engagement should have started before the regulatory submission was filed.'
+    ]
+  },
+  3: {
+    meaning: [
+      'The service and commercial infrastructure required for clinical IVD must exist before first system placement, not after scale. Projects that discover this after placement find themselves unable to meet clinical service expectations with analytical-grade operations, and unable to sustain reagent rental economics without hardware margin pressure.',
+      'This is the most capital-exposed position in the crossing because costs of the diagnostic operating model have already begun — post-market obligations, regulatory maintenance, service obligations to early placements — while the installed-base density required to generate margin recovery has not been reached.',
+      'Stage 3 is where market entry ends and market ownership begins. It is also where most crossings fail — not because the product is wrong, but because the infrastructure required to deploy it at clinical standards was treated as a scaling problem rather than a founding investment.'
+    ],
+    action: [
+      'Assess honestly whether the service and commercial gaps can be closed with the capital and timeline available, or whether a partnership — with an established IVD distributor or commercial partner — is a more viable path to installed-base formation than building infrastructure independently. Independent build is viable. It requires more capital and more time than most projects in this position have modelled.'
+    ]
+  }
+};
+
+// ════════════════════════════════════════════════════════════════════
+//  NAVIGATION & UI
+// ════════════════════════════════════════════════════════════════════
+
+function goTo(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+function startTool() {
+  fireEmail('open');
+  goTo('screen-s0');
+}
+
+function handleQ0(r) {
+  document.getElementById('warn-q0').classList.toggle('show', r.value === 'uncertain');
+}
+
+function getRadio(name) {
+  const el = document.querySelector(`input[name="${name}"]:checked`);
+  return el ? el.value : null;
+}
+
+function submitS0() {
+  const v = getRadio('q0');
+  if (!v) { alert('Please select an answer before continuing.'); return; }
+  S.q0 = v; goTo('screen-s1');
+}
+function submitS1() {
+  const a = getRadio('q1a'), b = getRadio('q1b'), c = getRadio('q1c');
+  if (!a || !b || !c) { alert('Please answer all three conditions before continuing.'); return; }
+  S.q1a = a; S.q1b = b; S.q1c = c; goTo('screen-s2');
+}
+function submitS2() {
+  const a = getRadio('q2a'), b = getRadio('q2b');
+  if (!a || !b) { alert('Please answer both conditions before continuing.'); return; }
+  S.q2a = a; S.q2b = b; goTo('screen-s3');
+}
+function submitS3() {
+  const a = getRadio('q3a'), b = getRadio('q3b');
+  if (!a || !b) { alert('Please answer both conditions before continuing.'); return; }
+  S.q3a = a; S.q3b = b;
+  compute();
+  showGate();
+}
+
+function compute() {
+  S.currentStage = determineCurrentStage();
+  S.failStage    = determineFailStage();
+  S.scores       = calcScores();
+  S.verdict      = buildVerdict(S.scores, S.failStage);
+  S.flags        = collectFlags();
+}
+
+function showGate() {
+  document.getElementById('gate-score-num').innerHTML = S.scores.total + '<span>/100</span>';
+  setTimeout(() => {
+    document.getElementById('gate-score-bar').style.width = S.scores.total + '%';
+  }, 80);
+  document.getElementById('gate-verdict-preview').textContent = S.verdict.s1;
+  goTo('screen-gate');
+}
+
+async function submitGate(e) {
+  e.preventDefault();
+  S.lead = {
+    firstName: document.getElementById('f-first').value,
+    lastName:  document.getElementById('f-last').value,
+    project:   document.getElementById('f-proj').value,
+    title:     document.getElementById('f-title').value,
+    email:     document.getElementById('f-email').value,
+    country:   document.getElementById('f-country').value,
+    context:   document.getElementById('f-context').value
+  };
+  const btn = document.getElementById('gate-submit-btn');
+  btn.disabled = true; btn.textContent = 'Sending…';
+  try {
+    await fireEmail('submission');
+  } catch(err) {
+    const errEl = document.getElementById('gate-error');
+    errEl.style.display = 'block';
+    errEl.textContent = 'Note: email delivery encountered an issue. Your report is shown below.';
+  }
+  renderReport();
+  goTo('screen-report');
+}
+
+function ctaClick() {
+  fireEmail('cta');
+  window.open(CONFIG.CONTACT_URL, '_blank');
+}
+
+// ════════════════════════════════════════════════════════════════════
+//  EMAIL
+// ════════════════════════════════════════════════════════════════════
+
+async function fireEmail(type) {
+  if (CONFIG.WEB3FORMS_KEY === 'YOUR_WEB3FORMS_ACCESS_KEY') return;
+  const l = S.lead;
+  const sc = S.scores;
+  const band = sc.total !== undefined ? scoreBand(sc.total) : null;
+
+  const subjects = {
+    open:       '[Crossing Tool] Tool opened — ' + new Date().toISOString().slice(0,16).replace('T',' '),
+    submission: '[Crossing Tool] Submission — ' + (l.project||'') +
+                ' | Score ' + sc.total + ' (' + (band ? band.label : '—') + ')' +
+                ' | Stage ' + S.currentStage,
+    cta:        '[Crossing Tool] 🔥 HOT LEAD — ' + (l.project||'unknown') +
+                ' | Score ' + sc.total + ' | Diagnostic conversation requested'
+  };
+
+  const message = type === 'open'
+    ? 'Tool opened.\nTimestamp: ' + new Date().toISOString() + '\nURL: ' + window.location.href
+    : buildEmailBody();
+
+  const payload = {
+    access_key: CONFIG.WEB3FORMS_KEY,
+    subject:    subjects[type],
+    from_name:  'Persodia Crossing Tool',
+    to:         CONFIG.NOTIFY_EMAIL,
+    message
+  };
+  if (type === 'submission' && l.email) payload.replyto = l.email;
+
+  const r = await fetch('https://api.web3forms.com/submit', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+  const d = await r.json();
+  if (!d.success) throw new Error(d.message || 'Delivery failed');
+}
+
+function buildEmailBody() {
+  const l = S.lead; const sc = S.scores;
+  const band = scoreBand(sc.total);
+  const sn = CONFIG.STAGE_NAMES;
+  return [
+    '══════════════════════════════════════════',
+    'PERSODIA CROSSING TOOL — ASSESSMENT REPORT',
+    '══════════════════════════════════════════',
+    '',
+    'PROJECT:      ' + l.project,
+    'NAME:         ' + l.firstName + ' ' + l.lastName,
+    'ROLE:         ' + l.title,
+    'EMAIL:        ' + l.email,
+    'COUNTRY:      ' + l.country,
+    'CONTEXT:      ' + (l.context || '—'),
+    '',
+    '──────────────────────────────────────────',
+    'SCORING',
+    '──────────────────────────────────────────',
+    '',
+    'OVERALL:       ' + sc.total + ' / 100  (' + band.label + ')',
+    'CURRENT STAGE: Stage ' + S.currentStage + ' — ' + sn[S.currentStage],
+    'FIRST GAP:     ' + (S.failStage !== null
+      ? 'Stage ' + S.failStage + ' — ' + sn[S.failStage]
+      : 'None — all stages passed'),
+    '',
+    'Stage 0 score: ' + sc.s0  + ' (weighted max: ' + sc.w.s0 + ')',
+    'Stage 1 score: ' + sc.s1  + ' (weighted max: ' + sc.w.s1 + ')',
+    'Stage 2 score: ' + sc.s2  + ' (weighted max: ' + sc.w.s2 + ')',
+    'Stage 3 score: ' + sc.s3  + ' (weighted max: ' + sc.w.s3 + ')',
+    '',
+    'VERDICT:',
+    S.verdict.s1,
+    '',
+    S.verdict.s2,
+    '',
+    '──────────────────────────────────────────',
+    'ANSWERS',
+    '──────────────────────────────────────────',
+    '',
+    'q0  constraint fit:    ' + S.q0,
+    'q1a system complete:   ' + S.q1a,
+    'q1b assay portfolio:   ' + S.q1b,
+    'q1c evidence arch:     ' + S.q1c,
+    'q2a regulatory:        ' + S.q2a,
+    'q2b reimbursement:     ' + S.q2b,
+    'q3a service/supply:    ' + S.q3a,
+    'q3b commercial:        ' + S.q3b,
+    '',
+    '──────────────────────────────────────────',
+    'FLAGS',
+    '──────────────────────────────────────────',
+    '',
+    S.flags.length ? S.flags.join('\n') : 'None',
+    '',
+    'Timestamp: ' + new Date().toISOString(),
+    'Source:    ' + window.location.href
+  ].join('\n');
+}
+
+// ════════════════════════════════════════════════════════════════════
+//  REPORT RENDER
+// ════════════════════════════════════════════════════════════════════
+
+function renderReport() {
+  const sc = S.scores; const l = S.lead;
+  const today = new Date().toLocaleDateString('en-GB', {day:'numeric',month:'long',year:'numeric'});
+
+  document.getElementById('rpt-proj').textContent  = l.project + ' — ' + l.firstName + ' ' + l.lastName + ', ' + l.title;
+  document.getElementById('rpt-date').textContent  = 'Assessment completed: ' + today;
+
+  // Score tiles
+  document.getElementById('tile-total').textContent = sc.total;
+  document.getElementById('bar-total').style.width  = sc.total + '%';
+  ['s0','s1','s2','s3'].forEach(k => {
+    const max = sc.w[k];
+    document.getElementById('tile-' + k).textContent  = sc[k];
+    document.getElementById('denom-' + k).textContent = '/ ' + max;
+    document.getElementById('bar-' + k).style.width   = max > 0 ? ((sc[k]/max)*100) + '%' : '0%';
+  });
+
+  // Verdict
+  document.getElementById('rpt-v1').textContent = S.verdict.s1;
+  document.getElementById('rpt-v2').textContent = S.verdict.s2;
+
+  // Content
+  const content = CONTENT[S.failStage] !== undefined ? CONTENT[S.failStage] : CONTENT[null];
+  document.getElementById('rpt-meaning').innerHTML = content.meaning.map(p => '<p>' + p + '</p>').join('');
+  document.getElementById('rpt-action').innerHTML  = content.action.map(p  => '<p>' + p + '</p>').join('');
+
+  // Responses table
+  function ansClass(v) {
+    return ({yes:'ans-yes',no:'ans-no',partially:'ans-partially',
+             uncertain:'ans-uncertain',gains:'ans-gains',loses:'ans-loses'})[v] || '';
+  }
+  function ansLabel(v) {
+    return ({yes:'Yes',no:'No',partially:'Partially',uncertain:'Uncertain',
+             gains:'Gains advantage',loses:'Loses advantage'})[v] || (v||'—');
+  }
+  const rows = [
+    { st:'0', key:'q0',  pts: sc.s0,  showPts: true  },
+    { st:'1', key:'q1a', pts: null,   showPts: false },
+    { st:'1', key:'q1b', pts: null,   showPts: false },
+    { st:'1', key:'q1c', pts: sc.s1,  showPts: true  },
+    { st:'2', key:'q2a', pts: null,   showPts: false },
+    { st:'2', key:'q2b', pts: sc.s2,  showPts: true  },
+    { st:'3', key:'q3a', pts: null,   showPts: false },
+    { st:'3', key:'q3b', pts: sc.s3,  showPts: true  }
+  ];
+  document.getElementById('rpt-responses').innerHTML = rows.map(r => `
+    <tr>
+      <td>Stage ${r.st}</td>
+      <td>${CONFIG.CONDITION_LABELS[r.key]}</td>
+      <td class="${ansClass(S[r.key])}">${ansLabel(S[r.key])}</td>
+      <td>${r.showPts
+        ? '<strong>' + r.pts + '</strong><span style="color:var(--slate-light);font-size:0.75rem;margin-left:4px">stage total</span>'
+        : '<span style="color:var(--slate-light)">—</span>'}</td>
+    </tr>`).join('');
+
+  // Flags
+  const flagsEl = document.getElementById('rpt-flags');
+  if (S.flags.length > 0) {
+    flagsEl.style.display = 'block';
+    flagsEl.innerHTML = '<strong>Conditions requiring attention:</strong><ul>' +
+      S.flags.map(f => '<li>' + f + '</li>').join('') + '</ul>';
+  }
+}
+
+// ════════════════════════════════════════════════════════════════════
+//  EVENT WIRING
+//  All handlers attached here — no inline onclick/onchange in HTML.
+//  This ensures compatibility with WhatsApp, Telegram, LinkedIn
+//  in-app browsers and other sandboxed mobile webviews.
+// ════════════════════════════════════════════════════════════════════
+
+document.addEventListener('DOMContentLoaded', function () {
+
+  // Entry
+  document.getElementById('btn-start').addEventListener('click', startTool);
+
+  // Stage 0
+  document.getElementById('btn-back-s0').addEventListener('click', function () { goTo('screen-entry'); });
+  document.getElementById('btn-next-s0').addEventListener('click', submitS0);
+  document.querySelectorAll('input[name="q0"]').forEach(function (radio) {
+    radio.addEventListener('change', function () { handleQ0(this); });
+  });
+
+  // Stage 1
+  document.getElementById('btn-back-s1').addEventListener('click', function () { goTo('screen-s0'); });
+  document.getElementById('btn-next-s1').addEventListener('click', submitS1);
+
+  // Stage 2
+  document.getElementById('btn-back-s2').addEventListener('click', function () { goTo('screen-s1'); });
+  document.getElementById('btn-next-s2').addEventListener('click', submitS2);
+
+  // Stage 3
+  document.getElementById('btn-back-s3').addEventListener('click', function () { goTo('screen-s2'); });
+  document.getElementById('btn-next-s3').addEventListener('click', submitS3);
+
+  // Gate form
+  document.getElementById('gate-form').addEventListener('submit', submitGate);
+
+  // CTA buttons
+  document.getElementById('btn-cta-inline').addEventListener('click', ctaClick);
+  document.getElementById('btn-cta-main').addEventListener('click', ctaClick);
+
+});
+</script>
+</body>
+</html>
